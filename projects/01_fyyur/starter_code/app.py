@@ -437,7 +437,7 @@ def create_artist_submission():
     phone = request.get_json()['phone']
     genres_all = request.get_json()['genres_all']
     facebook_link = request.get_json()['facebook_link']
-    image_link = ''
+    image_link = request.get_json()['image_link']
     artist = Artist(
       name=name,
       city=city,
