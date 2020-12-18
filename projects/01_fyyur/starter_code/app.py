@@ -40,6 +40,7 @@ class Venue(db.Model):
     state = db.Column(db.String(120), nullable=True)
     address = db.Column(db.String(120), nullable=True)
     phone = db.Column(db.String(120), nullable=True)
+    genres = db.Column(db.String(120), nullable=True)
     image_link = db.Column(db.String(500), nullable=True)
     facebook_link = db.Column(db.String(120), nullable=True)
 
@@ -234,13 +235,46 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
-
+  error = False
+  try:
+    # insert & Commit
+    name = request.form['name']
+    city = request.form['city']
+    state = request.form['state']
+    address = request.form['address']
+    phone = request.form['phone']
+    genres = request.form.getlist('genres')
+    facebook_link = request.form['facebook_link']
+    image_link = request.form['image_link']
+    venue = Venue(
+      name=name,
+      city=city,
+      state=state,
+      address=address,
+      phone=phone,
+      image_link=image_link,
+      facebook_link=facebook_link,
+      genres=genres
+    )
+    db.session.add(venue)
+    db.session.commit()
+  except:
+    # error Or Not
+    error = True
+    db.session.rollback()
+    print(sys.exc_info()) 
+  finally:
+    # dissmis
+    db.session.close()
+  if error:
+        abort (400)
+  else:
   # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+    return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -431,19 +465,19 @@ def create_artist_submission():
   error = False
   try:
     # insert & Commit
-    name = request.get_json()['name']
-    city = request.get_json()['city']
-    state = request.get_json()['state']
-    phone = request.get_json()['phone']
-    genres_all = request.get_json()['genres_all']
-    facebook_link = request.get_json()['facebook_link']
-    image_link = request.get_json()['image_link']
+    name = request.form['name']
+    city = request.form['city']
+    state = request.form['state']
+    phone = request.form['phone']
+    genres = request.form.getlist('genres')
+    facebook_link = request.form['facebook_link']
+    image_link = request.form['image_link']
     artist = Artist(
       name=name,
       city=city,
       state=state,
       phone=phone,
-      genres=genres_all,
+      genres=genres,
       image_link=image_link,
       facebook_link=facebook_link
     )
@@ -462,7 +496,8 @@ def create_artist_submission():
   if error:
     abort (400)
   else:
-    return redirect('/')
+    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+    return render_template('pages/home.html')
 
 #  Shows
 #  ----------------------------------------------------------------
