@@ -1,6 +1,6 @@
 {% extends 'layouts/main.html' %} {% block title %}New Artist{% endblock %} {% block content %}
 <div class="form-wrapper">
-    <form method="post" class="form">
+    <form method="post" class="form" id="artist_create">
         <h3 class="form-heading">List a new artist</h3>
         <div class="form-group">
             <label for="name">Name</label> {{ form.name(class_ = 'form-control', autofocus = true) }}
@@ -26,7 +26,62 @@
         <div class="form-group">
             <label for="genres">Facebook Link</label> {{ form.facebook_link(class_ = 'form-control', placeholder='http://', autofocus = true) }}
         </div>
-        <input type="submit" value="Create Venue" class="btn btn-primary btn-lg btn-block">
+        <input id="submit" type="submit" value="Create Venue" class="btn btn-primary btn-lg btn-block">
     </form>
 </div>
+
+{% endblock %} {% block script %}
+
+<script type="text/javascript" defer>
+    // Script For Fetch 
+    document.getElementById('artist_create').onsubmit = function(e) {
+        e.preventDefault();
+
+        function getAllSelected() {
+            let genres = [];
+            let element = document.getElementById('genres').options;
+            for (let i = 0; i < element.length; i++) {
+                let option = document.getElementById('genres').options[i];
+                if (option.selected) {
+                    genres.push(option.value);
+                }
+            }
+            return genres;
+        };
+
+        let name = document.getElementById('name').value;
+        let city = document.getElementById('city').value;
+        let state = document.getElementById('state').value;
+        let phone = document.getElementById('phone').value;
+        let genres_all = getAllSelected();
+        let facebook_link = document.getElementById('facebook_link').value;
+
+        fetch('/artist/create', {
+                method: 'POST',
+                body: JSON.stringify({
+                    'name': name,
+                    'city': city,
+                    'state': state,
+                    'phone': phone,
+                    'genres_all': genres_all,
+                    'facebook_link': facebook_link
+
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+
+                }
+            }).then(function(response) {
+                console.log(response.text());
+                return response.json();
+            }).then(function(jsonResponse) {
+                console.log(jsonResponse);
+            })
+            .catch(function() {
+                console.log("completed")
+            })
+    }
+</script>
+
 {% endblock %}
