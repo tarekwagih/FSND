@@ -423,7 +423,7 @@ def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
 
-@app.route('/artist/create', methods=['POST'])
+@app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
@@ -457,12 +457,12 @@ def create_artist_submission():
   finally:
     # dissmis
     db.session.close()
-  date = {}
-  date['error'] = error
+  data = {}
+  data['error'] = error
   if error:
     abort (400)
   else:
-    return render_template('pages/home.html', date)
+    return redirect('/')
 
 #  Shows
 #  ----------------------------------------------------------------
