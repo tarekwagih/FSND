@@ -127,7 +127,7 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
 
-  data = db.session.query(Venue).filter_by(Venue.id==venue_id).first()
+  data = db.session.query(Venue).filter(Venue.id==venue_id).first()
 
   return render_template('pages/show_venue.html', venue=data)
 
@@ -184,14 +184,33 @@ def create_venue_submission():
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')
 
-@app.route('/venues/<venue_id>', methods=['DELETE'])
+
+@app.route('/venues/<int:venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
-
+  error = False
+  try:
+    # db.session.query(Venue).filter(id=venue_id).delete()
+    Show.query.filter_by(venue_id=venue_id).delete()
+    Venue.query.filter_by(id=venue_id).delete()
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info()) 
+  finally:
+    db.session.close()
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  if error:
+      abort(400)
+  else:
+    flash('Venue was successfully Deleted!')
+  # TODO: on unsuccessful db insert, flash an error instead.
+  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    return render_template('pages/home.html')
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -243,9 +262,9 @@ def edit_artist_submission(artist_id):
     artist.name = request.form['name']
     artist.city = request.form['city']
     artist.state = request.form['state']
-    artist.address = request.form['address']
     artist.phone = request.form['phone']
     artist.genres = request.form.getlist('genres')
+    artist.image_link = request.form['image_link']
     artist.facebook_link = request.form['facebook_link']
     db.session.commit()
   except:
@@ -288,6 +307,7 @@ def edit_venue_submission(venue_id):
     venue.address = request.form['address']
     venue.phone = request.form['phone']
     venue.genres = request.form.getlist('genres')
+    venue.image_link = request.form['image_link']
     venue.facebook_link = request.form['facebook_link']
     db.session.commit()
   except:
