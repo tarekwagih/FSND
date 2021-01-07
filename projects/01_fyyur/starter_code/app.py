@@ -14,67 +14,22 @@ import logging
 from logging import Formatter, FileHandler, error
 from flask_wtf import Form
 from forms import *
+from pprint import pprint
 from flask_migrate import Migrate
 
-from pprint import pprint
+from models import db_create
 
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
-
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app, session_options={"expire_on_commit": False})
 # TODO: connect to a local postgresql database (Connected To Database # Tarek Wagih)
 migrate = Migrate(app, db)
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
 
-class Venue(db.Model):
-    __tablename__ = 'Venues'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120), nullable=True)
-    state = db.Column(db.String(120), nullable=True)
-    address = db.Column(db.String(120), nullable=True)
-    phone = db.Column(db.String(120), nullable=True)
-    genres = db.Column(db.String(), nullable=True)
-    image_link = db.Column(db.String(500), nullable=True)
-    facebook_link = db.Column(db.String(120), nullable=True)
-
-    show_id = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artists'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120), nullable=True)
-    state = db.Column(db.String(120), nullable=True)
-    phone = db.Column(db.String(120), nullable=True)
-    genres = db.Column(db.String(), nullable=True)
-    image_link = db.Column(db.String(500), nullable=True)
-    facebook_link = db.Column(db.String(120), nullable=True)
-    
-    show_id = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
-# TODO Implement Show Model
-class Show(db.Model):
-      __tablename__ = 'Shows'
-      
-      id = db.Column(db.Integer, primary_key=True)
-      artist_id = db.Column(db.Integer, db.ForeignKey('Artists.id'), nullable=False)
-      venue_id = db.Column(db.Integer, db.ForeignKey('Venues.id'), nullable=False)
-      date = db.Column(db.DateTime, default=babel.dates.format_datetime(), nullable=False)
+db_create_all(db, babel)
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -107,8 +62,10 @@ def venues():
   # TODO: replace with real venues data.
   # num_shows should be aggregated based on number of upcoming shows per venue.
   
-  data = db.session.query(Venue).group_by(Venue.id, Venue.city).all()
-  print(data)
+  # data = db.session.query(Venue).group_by(Venue.id, Venue.city).all()
+  
+  data = db.session.query(Venue).distinct(Venue.state).group_by(Venue.id, Venue.city, Venue.state).all()
+  
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
