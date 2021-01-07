@@ -15,7 +15,7 @@ def db_create_all(db, babel):
         image_link = db.Column(db.String(500), nullable=True)
         facebook_link = db.Column(db.String(120), nullable=True)
         website = db.Column(db.String(120), nullable=True)
-        seeking_talent = db.Column(db.Boolean(), nullable=True)
+        seeking_talent = db.Column(db.Integer, nullable=True)
         seeking_description = db.Column(db.String(500), nullable=True)
 
         show_id = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
@@ -35,7 +35,7 @@ def db_create_all(db, babel):
         image_link = db.Column(db.String(500), nullable=True)
         facebook_link = db.Column(db.String(120), nullable=True)
         website = db.Column(db.String(120), nullable=True)
-        seeking_talent = db.Column(db.Boolean(), nullable=True)
+        seeking_venue = db.Column(db.Integer, nullable=True)
         seeking_description = db.Column(db.String(500), nullable=True)
 
         show_id = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)

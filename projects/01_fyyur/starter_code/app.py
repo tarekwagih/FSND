@@ -17,7 +17,7 @@ from forms import *
 from pprint import pprint
 from flask_migrate import Migrate
 
-from models import db_create
+from models import db_create_all
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -111,6 +111,9 @@ def create_venue_submission():
     genres = request.form.getlist('genres')
     facebook_link = request.form['facebook_link']
     image_link = request.form['image_link']
+    website = request.form['website']
+    seeking_talent = request.form['seeking_talent']
+    seeking_description = request.form['seeking_description']
     venue = Venue(
       name=name,
       city=city,
@@ -119,6 +122,9 @@ def create_venue_submission():
       phone=phone,
       image_link=image_link,
       facebook_link=facebook_link,
+      website=website,
+      seeking_talent=seeking_talent,
+      seeking_description=seeking_description,
       genres=genres
     )
     db.session.add(venue)
@@ -223,6 +229,9 @@ def edit_artist_submission(artist_id):
     artist.genres = request.form.getlist('genres')
     artist.image_link = request.form['image_link']
     artist.facebook_link = request.form['facebook_link']
+    artist.website = request.form['website']
+    artist.seeking_venue = request.form['seeking_venue']
+    artist.seeking_description = request.form['seeking_description']
     db.session.commit()
   except:
     # error Or Not
@@ -266,6 +275,9 @@ def edit_venue_submission(venue_id):
     venue.genres = request.form.getlist('genres')
     venue.image_link = request.form['image_link']
     venue.facebook_link = request.form['facebook_link']
+    venue.website = request.form['website']
+    venue.seeking_talent = request.form['seeking_talent']
+    venue.seeking_description = request.form['seeking_description']
     db.session.commit()
   except:
     # error Or Not
@@ -305,6 +317,9 @@ def create_artist_submission():
     genres = request.form.getlist('genres')
     facebook_link = request.form['facebook_link']
     image_link = request.form['image_link']
+    website = request.form['website']
+    seeking_talent = request.form['seeking_talent']
+    seeking_description = request.form['seeking_description']
     artist = Artist(
       name=name,
       city=city,
@@ -312,6 +327,9 @@ def create_artist_submission():
       phone=phone,
       genres=genres,
       image_link=image_link,
+      website=website,
+      seeking_talent=seeking_talent,
+      seeking_description=seeking_description,
       facebook_link=facebook_link
     )
     db.session.add(artist)
