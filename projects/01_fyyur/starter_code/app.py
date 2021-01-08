@@ -16,8 +16,9 @@ from flask_wtf import Form
 from forms import *
 from pprint import pprint
 from flask_migrate import Migrate
+from sqlalchemy.orm import aliased
 
-from models import db_create_all
+# from models import db_create_all
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -29,7 +30,64 @@ db = SQLAlchemy(app, session_options={"expire_on_commit": False})
 # TODO: connect to a local postgresql database (Connected To Database # Tarek Wagih)
 migrate = Migrate(app, db)
 
-db_create_all(db, babel)
+# db_create_all(db, babel)
+
+class Venue(db.Model):
+    __tablename__ = 'venues'
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=True)
+    state = db.Column(db.String(120), nullable=True)
+    address = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(120), nullable=True)
+    genres = db.Column(db.String(), nullable=True)
+    image_link = db.Column(db.String(500), nullable=True)
+    facebook_link = db.Column(db.String(120), nullable=True)
+
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    website = db.Column(db.String(120), nullable=True)
+    seeking_talent = db.Column(db.Integer, nullable=True)
+    seeking_description = db.Column(db.String(500), nullable=True)
+
+    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+    show_id = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
+
+class Artist(db.Model):
+    __tablename__ = 'artists'
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=True)
+    state = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(120), nullable=True)
+    genres = db.Column(db.String(), nullable=True)
+    image_link = db.Column(db.String(500), nullable=True)
+    facebook_link = db.Column(db.String(120), nullable=True)
+
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    website = db.Column(db.String(120), nullable=True)
+    seeking_venue = db.Column(db.Integer, nullable=True)
+    seeking_description = db.Column(db.String(500), nullable=True)
+
+    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+    show_id = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
+
+
+# TODO Implement Show Model
+
+class Show(db.Model):
+    __tablename__ = 'shows'
+    __table_args__ = {'extend_existing': True}
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
+    date = db.Column(db.DateTime, default=babel.dates.format_datetime(), nullable=False)
+
+
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -62,11 +120,27 @@ def venues():
   # TODO: replace with real venues data.
   # num_shows should be aggregated based on number of upcoming shows per venue.
   
-  # data = db.session.query(Venue).group_by(Venue.id, Venue.city).all()
+  city_groub = db.session.query(Venue).distinct(Venue.state, Venue.city).all()
+
+  data = []
   
-  data = db.session.query(Venue).distinct(Venue.state).group_by(Venue.id, Venue.city, Venue.state).all()
+  for city_l in city_groub:
+        val_dic = {}
+        venues = db.session.query(Venue).group_by(Venue.id, Venue.city, Venue.state).all()
+        for venue in venues:
+              if venue.city == city_l.city:
+                    val_dic['city'] = city_l.city
+                    val_dic['state'] = city_l.state
+              venue_i = db.session.query(Venue).filter(Venue.city == city_l.city).all()
+              ven_ls = []
+              for ven_last in venue_i:
+                  ven_ls.append(ven_last)
+              val_dic['venues'] = ven_ls
+        data.append(val_dic)
   
-  return render_template('pages/venues.html', areas=data);
+  pprint(data)
+
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -83,8 +157,34 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
+  data = {}
+  
+  def row2dict(row):
+        d = {}
+        for column in row.__table__.columns:
+            d[column.name] = str(getattr(row, column.name))
 
-  data = db.session.query(Venue).filter(Venue.id==venue_id).first()
+        return d
+      
+  venue = db.session.query(Venue).filter(Venue.id==venue_id).first()
+  ven_des = row2dict(venue)
+    
+  past_shows_count = db.session.query(Show).filter(Show.venue_id == venue_id, Show.date > babel.dates.format_datetime()).count()
+  upcoming_shows_count = db.session.query(Show).filter(Show.venue_id == venue_id, Show.date < babel.dates.format_datetime()).count()
+
+  past_shows = db.session.query(Show).filter(Show.venue_id == venue_id, Show.date > babel.dates.format_datetime()).all()
+  upcoming_shows = db.session.query(Show)\
+      .join(Artist)\
+      .add_columns(Artist.name, Show.date, Artist.image_link, Show.artist_id)\
+      .filter(Show.venue_id == venue_id, Show.date < babel.dates.format_datetime())\
+    .all()
+
+  count_list = {'past_shows_count': past_shows_count, 'past_shows': past_shows,'upcoming_shows_count': upcoming_shows_count, 'upcoming_shows': upcoming_shows}
+
+  data.update(ven_des)
+  data.update(count_list)
+  
+  pprint(upcoming_shows)
 
   return render_template('pages/show_venue.html', venue=data)
 
@@ -199,8 +299,40 @@ def show_artist(artist_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   data = Artist.query.get(artist_id)
-
+  shows = db.session.query(Show)\
+      .join(Venue, Show.venue_id == Venue.id)\
+      .join(Artist, Show.artist_id == Artist.id)\
+      .add_columns(Venue.name, Artist.name, Show.date, Artist.image_link, Show.artist_id, Show.venue_id)\
+      .filter(Show.artist_id == artist_id)\
+      .all()
+  
   data.genres = list(data.genres)
+  
+  data = {}
+
+  def row2dict(row):
+      d = {}
+      for column in row.__table__.columns:
+            d[column.name] = str(getattr(row, column.name))
+      return d
+
+  artist = db.session.query(Artist).filter(Artist.id == artist_id).first()
+  ven_des = row2dict(artist)
+
+  past_shows_count = db.session.query(Show).filter(Show.artist_id == artist_id, Show.date > babel.dates.format_datetime()).count()
+  upcoming_shows_count = db.session.query(Show).filter(Show.artist_id == artist_id, Show.date < babel.dates.format_datetime()).count()
+
+  past_shows = db.session.query(Show).filter(Show.artist_id == artist_id, Show.date > babel.dates.format_datetime()).all()
+  upcoming_shows = db.session.query(Show)\
+      .join(Venue)\
+      .add_columns(Venue.name, Show.date, Venue.image_link, Show.venue_id)\
+      .filter(Show.artist_id == artist_id, Show.date < babel.dates.format_datetime())\
+      .all()
+
+  count_list = {'past_shows_count': past_shows_count, 'past_shows': past_shows,'upcoming_shows_count': upcoming_shows_count, 'upcoming_shows': upcoming_shows}
+
+  data.update(ven_des)
+  data.update(count_list)
 
   return render_template('pages/show_artist.html', artist=data)
 
@@ -209,9 +341,9 @@ def show_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
   form = ArtistForm()
-  artist= db.session.query(Artist).filter(Artist.id==artist_id).first()
-  pprint(artist)
+  
   # TODO: populate form with fields from artist with ID <artist_id>
+  artist= db.session.query(Artist).filter(Artist.id==artist_id).first()
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
@@ -254,9 +386,10 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
+  
+  # TODO: populate form with values from venue with ID <venue_id>
   venue = db.session.query(Venue).filter(Venue.id == venue_id).first()
 
-  # TODO: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
@@ -318,7 +451,7 @@ def create_artist_submission():
     facebook_link = request.form['facebook_link']
     image_link = request.form['image_link']
     website = request.form['website']
-    seeking_talent = request.form['seeking_talent']
+    seeking_venue = request.form['seeking_venue']
     seeking_description = request.form['seeking_description']
     artist = Artist(
       name=name,
@@ -327,10 +460,10 @@ def create_artist_submission():
       phone=phone,
       genres=genres,
       image_link=image_link,
+      facebook_link=facebook_link,
       website=website,
-      seeking_talent=seeking_talent,
       seeking_description=seeking_description,
-      facebook_link=facebook_link
+      seeking_venue=seeking_venue
     )
     db.session.add(artist)
     db.session.commit()
@@ -356,11 +489,11 @@ def create_artist_submission():
 def shows():
   # displays list of shows at /shows
   # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # num_shows should be aggregated based on number of upcoming shows per venue.
   data = db.session.query(Show)\
     .join(Venue, Show.venue_id == Venue.id)\
     .join(Artist, Show.artist_id == Artist.id)\
-    .add_columns(Venue.name, Venue.image_link , Artist.name, Show.date, Show.artist_id, Show.venue_id)\
+    .add_columns(Venue.name, Artist.name, Show.date, Artist.image_link, Show.artist_id, Show.venue_id)\
     .all()
     
   pprint(data)

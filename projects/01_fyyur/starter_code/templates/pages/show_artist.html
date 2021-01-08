@@ -46,9 +46,9 @@
         {%for show in artist.upcoming_shows %}
         <div class="col-sm-4">
             <div class="tile tile-show">
-                <img src="{{ show.venue_image_link }}" alt="Show Venue Image" />
-                <h5><a href="/venues/{{ show.venue_id }}">{{ show.venue_name }}</a></h5>
-                <h6>{{ show.start_time|datetime('full') }}</h6>
+                <img src="{{ show.image_link }}" alt="Show Venue Image" />
+                <h5><a href="/venues/{{ show.venue_id }}">{{ show.name }}</a></h5>
+                <h6>{{ show.date }}</h6>
             </div>
         </div>
         {% endfor %}
@@ -60,9 +60,9 @@
         {%for show in artist.past_shows %}
         <div class="col-sm-4">
             <div class="tile tile-show">
-                <img src="{{ show.venue_image_link }}" alt="Show Venue Image" />
-                <h5><a href="/venues/{{ show.venue_id }}">{{ show.venue_name }}</a></h5>
-                <h6>{{ show.start_time|datetime('full') }}</h6>
+                <img src="{{ show.image_link }}" alt="Show Venue Image" />
+                <h5><a href="/venues/{{ show.venue_id }}">{{ show.name }}</a></h5>
+                <h6>{{ show.date }}</h6>
             </div>
         </div>
         {% endfor %}
