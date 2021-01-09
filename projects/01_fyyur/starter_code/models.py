@@ -1,3 +1,21 @@
+import babel
+from sqlalchemy import Column, String, create_engine
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+
+db = SQLAlchemy()
+
+def setup_db(app):
+    db.app = app
+    db.init_app(app)
+    app.config.from_object('config')
+    db.create_all()
+    migrate = Migrate(app, db)
+
+
+
+
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
@@ -22,7 +40,6 @@ class Venue(db.Model):
     # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
     show_id = db.relationship('Show', backref='Venue', cascade="all, delete-orphan", lazy=True)
 
-
 class Artist(db.Model):
     __tablename__ = 'artists'
 
@@ -44,7 +61,6 @@ class Artist(db.Model):
     show_id = db.relationship('Show', backref='Artist', cascade="all, delete-orphan", lazy=True)
 
 
-
 # TODO Implement Show Model
 class Show(db.Model):
     __tablename__ = 'shows'
@@ -53,6 +69,3 @@ class Show(db.Model):
     artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
     date = db.Column(db.DateTime, default=babel.dates.format_datetime(), nullable=False)
-
-
-db.create_all()
