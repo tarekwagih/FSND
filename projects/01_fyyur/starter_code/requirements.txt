@@ -1,4 +1,9 @@
 babel
 python-dateutil==2.6.0
 flask-moment
-flask-wtf
+FlaskForm
+datetime
+flask 
+flask_sqlalchemy
+flask_wtf
+flask_migrate
