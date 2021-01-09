@@ -32,7 +32,6 @@ from models import db, setup_db, Venue, Artist, Show
 # App Config.
 #----------------------------------------------------------------------------#
 
-
 def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
