@@ -1,11 +1,12 @@
 import os
 from flask import Flask, request, abort, jsonify
+from flask.wrappers import Request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 import random
 import json
 from pprint import pprint
-from models import setup_db, Question, Category
+from models import setup_db, Question, Category, db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -85,6 +86,21 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
+  @app.route('/questions/<int:question_id>', methods=['DELETE'])
+  @cross_origin()
+  def delete_questions(question_id):
+        question = Question.query.filter_by(id=question_id).first()
+        if question:
+          if question.delete():
+              return jsonify({"success": True})
+          else:
+              return jsonify({
+                  "success": False
+              })
+        else:
+              abort(400)
+              
+
 
   '''
   @TODO: 
@@ -96,6 +112,30 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+  @app.route('/questions', methods=['POST'])
+  @cross_origin()
+  def add_questions():
+      js_data = json.loads(request.data)
+      question = js_data['question']
+      answer = js_data['answer']
+      difficulty = js_data['difficulty']
+      category = js_data['category']
+      qu = Question(
+          question=question,
+          answer=answer,
+          difficulty=difficulty,
+          category=category
+      )
+
+      qu.insert()
+      
+      if question:
+          return jsonify({"success": True})
+      else:
+          abort(400)
+
+
+  
 
   '''
   @TODO: 
@@ -206,6 +246,14 @@ def create_app(test_config=None):
       "error": 400,
       "message": "unprocessable"
       }), 400
+
+  @app.errorhandler(405)
+  def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 405,
+        "message": "method not allowed"
+    }), 405
     
   @app.errorhandler(500)
   def unprocessable(error):
