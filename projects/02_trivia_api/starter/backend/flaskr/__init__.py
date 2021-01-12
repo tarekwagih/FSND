@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 import random
+import json
 from pprint import pprint
 from models import setup_db, Question, Category
 
@@ -37,11 +38,9 @@ def create_app(test_config=None):
   def get_categories():
       categories = Category.query.all()
       formated_categories = [category.format() for category in categories]
-      pprint(formated_categories)
- 
+      
       return jsonify({ "categories" : formated_categories })
       
-
 
   '''
   @TODO: 
@@ -55,6 +54,29 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
+  @app.route('/questions', methods=['GET'])
+  @cross_origin()
+  def get_questions():
+      page = request.args.get('page', 1, type=int)
+      start = (page - 1 ) * 10
+      end = start + 10
+      questions = Question.query.all()
+      formated_questions = [question.format() for question in questions]
+      
+      pprint(formated_questions)
+      
+      categories = Category.query.all()
+      
+      formated_categories = [category.format() for category in categories]
+      pprint(formated_categories)
+
+      current_category = Category.query.first()
+
+      return jsonify({
+        "questions": formated_questions[start:end],  
+        "total_questions": len(questions),
+        "categories": formated_categories,
+        })
 
   '''
   @TODO: 
@@ -94,6 +116,30 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+  @app.route('/categories/<int:cat_id>/questions', methods=['GET'])
+  @cross_origin()
+  def get_questions_by_category(cat_id):
+      page = request.args.get('page', 1, type=int)
+      start = (page - 1) * 10
+      end = start + 10
+      questions = Question.query.filter(Question.category == cat_id).all()
+      formated_questions = [question.format() for question in questions]
+
+      pprint(formated_questions)
+
+      categories = Category.query.all()
+
+      formated_categories = [category.format() for category in categories]
+      pprint(formated_categories)
+
+      current_category = Category.query.first()
+
+      return jsonify({
+          "questions": formated_questions[start:end],
+          "total_questions": len(questions),
+          "categories": formated_categories,
+      })
+
 
 
   '''
@@ -107,13 +153,70 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  @cross_origin()
+  def get_questions_for_quizz():      
+      js_data = json.loads(request.data)
+      pprint(js_data)
+      category_id = js_data['quiz_category']['id']
+      print(category_id)
+      questions = Question.query.all()
+      formated_questions = [question.format() for question in questions]
+      
+      category_id = js_data['quiz_category']['id']
+     # previous_question_id = js_data['previous_questions']['id']
+
+      previous_question = Question.query.filter_by(category=category_id).one_or_none()
+      formated_previous_question = [question.format() for question in questions]
+
+      pprint(formated_questions)
+
+      return jsonify({
+          "showAnswer": False,
+          "previousQuestions": formated_previous_question,
+          "currentQuestion": formated_questions,
+          "forceEnd": False
+      })
 
   '''
   @TODO: 
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+  @app.errorhandler(404)
+  def not_found(error):
+      return jsonify({
+          "success": False,
+          "error": 404,
+          "message": "Not found"
+      }), 404
   
+  @app.errorhandler(422)
+  def unprocessable(error):
+    return jsonify({
+      "success": False, 
+      "error": 422,
+      "message": "unprocessable"
+      }), 422
+    
+  @app.errorhandler(400)
+  def unprocessable(error):
+    return jsonify({
+      "success": False, 
+      "error": 400,
+      "message": "unprocessable"
+      }), 400
+    
+  @app.errorhandler(500)
+  def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 500,
+        "message": "server error"
+    }), 500
+
+
+    
   return app
 
 
