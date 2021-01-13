@@ -217,25 +217,38 @@ def create_app(test_config=None):
       js_data = json.loads(request.data)
       pprint(js_data)
       category_id = js_data['quiz_category']['id']
-      if category_id != 0:
-          if Question.query.filter(Question.category == category_id).count() != 0:
-              question = random.choice(Question.query.filter(Question.category == category_id).all())
-          else:
-              question = {}
-      else:
-          question = random.choice(Question.query.all())
-      if question:
-          formated_question = question.format()
-      else:
-          formated_question = False
-      
+
       previous_question_id = js_data['previous_questions']
-      
+
       if previous_question_id:
-          previous_question = Question.query.filter(Question.id == previous_question_id[0]).first()
-          formated_previous_question = previous_question.format()
+            previous_question = Question.query.filter(Question.id == previous_question_id[0]).first()
+            formated_previous_question = previous_question.format()
+            if category_id != 0:
+                if Question.query.filter(Question.category == category_id, Question.id != previous_question.id).count() != 0:
+                    question = random.choice(Question.query.filter(Question.category == category_id, Question.id != previous_question.id).all())
+                else:
+                    question = {}
+            else:
+                question = random.choice(Question.query.filter(Question.id != previous_question.id).all())
+            if question:
+                formated_question = question.format()
+            else:
+                formated_question = False
+
       else:
-          formated_previous_question = {}
+            formated_previous_question = {}
+            if category_id != 0:
+                if Question.query.filter(Question.category == category_id).count() != 0:
+                    question = random.choice(Question.query.filter(Question.category == category_id).all())
+                else:
+                    question = {}
+            else:
+                question = random.choice(Question.query.all())
+            if question:
+                formated_question = question.format()
+            else:
+                formated_question = False
+
 
       return jsonify({
           "success": True,
