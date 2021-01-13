@@ -38,10 +38,15 @@ def create_app(test_config=None):
   @cross_origin()
   def get_categories():
       categories = Category.query.all()
-      formated_categories = [category.format() for category in categories]
-      
-      return jsonify({ "categories" : formated_categories })
-      
+      formated = {}
+      for category in categories:
+          formated[category.id] = category.type
+          
+      return jsonify({
+          "success": True,
+          "categories" : formated 
+          })
+
 
   '''
   @TODO: 
@@ -63,17 +68,15 @@ def create_app(test_config=None):
       end = start + 10
       questions = Question.query.all()
       formated_questions = [question.format() for question in questions]
-      
-      pprint(formated_questions)
-      
+            
       categories = Category.query.all()
       
-      formated_categories = [category.format() for category in categories]
-      pprint(formated_categories)
-
-      current_category = Category.query.first()
+      formated_categories = {}
+      for category in categories:
+          formated_categories[category.id] = category.type
 
       return jsonify({
+        "success": True,  
         "questions": formated_questions[start:end],  
         "total_questions": len(questions),
         "categories": formated_categories,
@@ -89,17 +92,12 @@ def create_app(test_config=None):
   @app.route('/questions/<int:question_id>', methods=['DELETE'])
   @cross_origin()
   def delete_questions(question_id):
-        question = Question.query.filter_by(id=question_id).first()
+        question = Question.query.filter_by(id=question_id).one_or_none()
         if question:
-          if question.delete():
-              return jsonify({"success": True})
-          else:
-              return jsonify({
-                  "success": False
-              })
+          question.delete()
+          return jsonify({"success": True})
         else:
-              abort(400)
-              
+            abort(404)
 
 
   '''
@@ -134,9 +132,6 @@ def create_app(test_config=None):
       else:
           abort(400)
 
-
-  
-
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -147,6 +142,30 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
+  @app.route('/search', methods=['POST'])
+  @cross_origin()
+  def search_questions():
+      js_data = json.loads(request.data)
+      search_term = js_data['searchTerm']
+      search_like = "%{}%".format(search_term)
+      questions = Question.query.filter(Question.question.ilike(search_like)).all()
+      formated_questions = [question.format() for question in questions]
+
+      if questions:
+        questions_category = Question.query.filter(Question.question.ilike(search_like)).first()
+        current_category = Category.query.filter(Category.id == questions_category.category).first()
+        formated_category = current_category.format()
+      else:
+          formated_category = []
+
+      return jsonify({
+          "success": True,
+          "questions": formated_questions,
+          "total_questions": len(questions),
+          "current_category": formated_category
+
+      })
+
 
   '''
   @TODO: 
@@ -165,19 +184,18 @@ def create_app(test_config=None):
       questions = Question.query.filter(Question.category == cat_id).all()
       formated_questions = [question.format() for question in questions]
 
-      pprint(formated_questions)
-
       categories = Category.query.all()
-
       formated_categories = [category.format() for category in categories]
-      pprint(formated_categories)
 
       current_category = Category.query.first()
+      current_category_f = current_category.format()
 
       return jsonify({
+          "success": True,
           "questions": formated_questions[start:end],
           "total_questions": len(questions),
           "categories": formated_categories,
+          "current_category": current_category_f
       })
 
 
@@ -199,23 +217,29 @@ def create_app(test_config=None):
       js_data = json.loads(request.data)
       pprint(js_data)
       category_id = js_data['quiz_category']['id']
-      print(category_id)
-      questions = Question.query.all()
-      formated_questions = [question.format() for question in questions]
+      if category_id != 0:
+          if Question.query.filter(Question.category == category_id).count() != 0:
+              question = random.choice(Question.query.filter(Question.category == category_id).all())
+          else:
+              question = {}
+      else:
+          question = random.choice(Question.query.all())
+      if question:
+          formated_question = question.format()
+      else:
+          formated_question = False
       
-      category_id = js_data['quiz_category']['id']
-     # previous_question_id = js_data['previous_questions']['id']
-
-      previous_question = Question.query.filter_by(category=category_id).one_or_none()
-      formated_previous_question = [question.format() for question in questions]
-
-      pprint(formated_questions)
+      previous_question_id = js_data['previous_questions']
+      
+      if previous_question_id:
+          previous_question = Question.query.filter(Question.id == previous_question_id[0]).first()
+          formated_previous_question = previous_question.format()
+      else:
+          formated_previous_question = {}
 
       return jsonify({
-          "showAnswer": False,
-          "previousQuestions": formated_previous_question,
-          "currentQuestion": formated_questions,
-          "forceEnd": False
+          "success": True,
+          "question": formated_question
       })
 
   '''
@@ -264,7 +288,6 @@ def create_app(test_config=None):
     }), 500
 
 
-    
   return app
 
 
