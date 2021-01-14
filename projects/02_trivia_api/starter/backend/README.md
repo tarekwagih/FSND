@@ -75,20 +75,154 @@ GET '/categories'
 GET ...
 POST ...
 DELETE ...
+```
+## Documentation
 
-GET '/categories'
+### GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
 - Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
+```
+{
+    '1' : "Science",
+    '2' : "Art",
+    '3' : "Geography",
+    '4' : "History",
+    '5' : "Entertainment",
+    '6' : "Sports"
+}
+```
+
+### GET '/questions'
+- Feches a dictionary of questions and total questions 
+- returens only 10 results each time, you can request next results with request argument.
+- request argument: "page"
+- returns data of that structure
+
+```
+{
+  "categories": {
+    "1": "Science", 
+    "2": "Art", 
+    "3": "Geography", 
+    "4": "History", 
+    "5": "Entertainment", 
+    "6": "Sports"
+  }, 
+  "questions": [
+    {
+      "answer": "Muhammad Ali", 
+      "category": 6, 
+      "difficulty": 2, 
+      "id": 31, 
+      "question": "What boxer's original name is Cassius Clay?"
+    }
+    ], 
+  "success": true, 
+  "total_questions": 1
+}
 
 ```
 
+### DELETE '/questions/1'
+- Deletes a question with spacific id which in that case "id=1"
+- if the id of the question is in the database, the response is 
+```
+{
+    "success": True
+}
+```
+- if the id is not in the database it will abort with 404
+
+### POST '/questions'
+- creates a new question 
+- adding new question requires you to send (the quistion, the answer, the category, the difficulty)
+- that will send you, if success:
+```
+{
+    "success": True
+}
+```
+ if not:
+    will abort with 400 error, because some way yor request is unprocessable.
+
+### POST '/search'
+- with that endpoint you can search the questions with any word in the question it self.
+- end point expects to recive parameter "searchTerm".
+- the response of that will be:
+```
+{ 
+    "categories": {
+        "1": "Science", 
+        "2": "Art", 
+        "3": "Geography", 
+        "4": "History", 
+        "5": "Entertainment", 
+        "6": "Sports"
+  }, 
+    "questions": [
+        {
+        "answer": "Muhammad Ali", 
+        "category": 6, 
+        "difficulty": 2, 
+        "id": 31, 
+        "question": "What boxer's original name is Cassius Clay?"
+        }
+    ], 
+    "success": true, 
+    "total_questions": 1
+}
+```
+
+### GET '/categories/1/questions'
+- endpoint to filter the questions with category
+- parametars : "category id as (1) in that case"
+- the response will be:
+```
+{ 
+    "categories": {
+        "1": "Science", 
+        "2": "Art", 
+        "3": "Geography", 
+        "4": "History", 
+        "5": "Entertainment", 
+        "6": "Sports"
+  }, 
+    "questions": [
+        {
+        "answer": "Muhammad Ali", 
+        "category": 6, 
+        "difficulty": 2, 
+        "id": 31, 
+        "question": "What boxer's original name is Cassius Clay?"
+        }
+    ], 
+    "current_category": {
+        "6": "Sports"
+    }, 
+    "success": true, 
+    "total_questions": 1
+}
+```
+
+## POST '/quizzes'
+- endpoint geves back random question from a choseen category or from all.
+- the end point expects the resive the previce question in not the first question time.
+- expect the response will by:
+```
+{  
+    "questions": [
+        {
+        "answer": "Muhammad Ali", 
+        "category": 6, 
+        "difficulty": 2, 
+        "id": 31, 
+        "question": "What boxer's original name is Cassius Clay?"
+        }
+    ], 
+    "success": true, 
+}
+```
 
 ## Testing
 To run the tests, run
