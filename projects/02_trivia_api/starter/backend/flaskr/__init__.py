@@ -30,7 +30,7 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Headers',
                              'Content-Type,  Authorization')
         response.headers.add('Access-Control-Allow-Headers',
-                             'GET, POST, DELETE, PATCH, OPTIONS')
+                             'GET, POST, DELETE')
         return response
 
     '''
@@ -188,7 +188,7 @@ def create_app(test_config=None):
         categories = Category.query.all()
         formated_categories = [category.format() for category in categories]
 
-        current_category = Category.query.first()
+        current_category = Category.query.filter(Category.id == cat_id).first()
         current_category_f = current_category.format()
 
         return jsonify({
