@@ -26,7 +26,7 @@ class TriviaTestCase(unittest.TestCase):
             self.db.create_all()
         
         self.new_question = {
-            'question' : 'Test Creation ?',
+            'question': 'Test Creation ?',
             'answer': 'True',
             'category': 1,
             'difficulty': 5
@@ -70,9 +70,9 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_delete_question(self):
         """Test delete question """
-        res = self.client().delete('/questions/37')
+        res = self.client().delete('/questions/73')
         data = json.loads(res.data)
-        question = Question.query.filter(Question.id == 37).one_or_none()
+        question = Question.query.filter(Question.id == 73).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
@@ -89,12 +89,6 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-
-    def test_500_from_create_question(self):
-        """Test create question """
-        res = self.client().post('/questions')
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 500)
 
     def test_search_question(self):
         """Test search question """
@@ -140,14 +134,6 @@ class TriviaTestCase(unittest.TestCase):
         """Test 404 """
         res = self.client().get('/not_found')
         self.assertEqual(res.status_code, 404)
-
-
-    def test_500(self):
-        """Test 500 """
-        res = self.client().patch('/category')
-        self.assertEqual(res.status_code, 500)
-
-
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

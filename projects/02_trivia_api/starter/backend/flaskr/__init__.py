@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, abort, jsonify
 from flask.wrappers import Request
+import requests
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 import random
@@ -182,22 +183,33 @@ def create_app(test_config=None):
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * 10
         end = start + 10
+        
         questions = Question.query.filter(Question.category == cat_id).all()
-        formated_questions = [question.format() for question in questions]
+        if len(questions) != 0:
+            formated_questions = [question.format() for question in questions]
+            questions_f_page = formated_questions[start:end]
+        else:
+            questions_f_page = []
 
         categories = Category.query.all()
         formated_categories = [category.format() for category in categories]
 
         current_category = Category.query.filter(Category.id == cat_id).first()
-        current_category_f = current_category.format()
+        if current_category:
+            current_category_f = current_category.format()
+        else:
+            current_category_f = {}
 
-        return jsonify({
-            "success": True,
-            "questions": formated_questions[start:end],
-            "total_questions": len(questions),
-            "categories": formated_categories,
-            "current_category": current_category_f
-        })
+        if len(current_category_f) == 0:
+            abort(500)
+        else:
+            return jsonify({
+                "success": True,
+                "questions": questions_f_page,
+                "total_questions": len(questions),
+                "categories": formated_categories,
+                "current_category": current_category_f
+            })
 
     '''
     @TODO:
@@ -213,7 +225,6 @@ def create_app(test_config=None):
     @cross_origin()
     def get_questions_for_quizz():
         js_data = json.loads(request.data)
-        pprint(js_data)
         category_id = js_data['quiz_category']['id']
 
         previous_question_id = js_data['previous_questions']
