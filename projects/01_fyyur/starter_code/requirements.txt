@@ -1,5 +1,5 @@
 babel
-python-dateutil==2.6.0
+python-dateutil
 flask-moment
 FlaskForm
 datetime
@@ -7,3 +7,20 @@ flask
 flask_sqlalchemy
 flask_wtf
 flask_migrate
+astroid
+Click
+ecdsa
+future
+isort
+itsdangerous
+Jinja2
+lazy-object-proxy
+MarkupSafe
+mccabe
+pylint
+python-jose-cryptodome
+six
+typed-ast
+Werkzeug
+wrapt
+Flask-Cors
